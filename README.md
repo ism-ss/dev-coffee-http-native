@@ -3,7 +3,9 @@
 API REST em memória para fila de pedidos da cafeteria Dev Coffee,
 feita com o módulo nativo `node:http` (sem dependências externas).
 
-**Autor:** Ismael [sobrenome]
+OBS: O N0ori na aba de contribuição sou eu mesmo, é uma outra conta minha que estava trocada no visual studio code
+
+**Autor:** Ismael Silva
 
 ## Como executar
 Requisitos: Node.js 18+
