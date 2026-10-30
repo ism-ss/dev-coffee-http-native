@@ -4,14 +4,17 @@ const { URL } = require('node:url');
 const PORT = 3000;
 const STATUS_VALIDOS = ['pendente', 'pronto', 'cancelado'];
 
+// Armazenamento em memória
 let orders = [];
-let nextId = 1; 
+let nextId = 1;
 
+// Envia uma resposta JSON com o status informado
 function sendJson(res, statusCode, data) {
   res.writeHead(statusCode, { 'Content-Type': 'application/json; charset=utf-8' });
   res.end(JSON.stringify(data));
 }
 
+// Lê o body da requisição via stream e converte para objeto
 function readBody(req, callback) {
   let raw = '';
   req.on('data', (chunk) => {
@@ -34,7 +37,7 @@ const isNonEmptyString = (v) => typeof v === 'string' && v.trim() !== '';
 
 const server = http.createServer((req, res) => {
   const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
-  const parts = url.pathname.split('/').filter(Boolean); 
+  const parts = url.pathname.split('/').filter(Boolean);
   const method = req.method;
 
   if (parts[0] === 'orders') {
@@ -42,12 +45,14 @@ const server = http.createServer((req, res) => {
     const id = hasId ? Number(parts[1]) : null;
     const order = hasId ? orders.find((o) => o.id === id) : null;
 
+    // GET /orders (aceita filtro ?status=)
     if (parts.length === 1 && method === 'GET') {
       const status = url.searchParams.get('status');
       const result = status ? orders.filter((o) => o.status === status) : orders;
       return sendJson(res, 200, result);
     }
 
+    // POST /orders
     if (parts.length === 1 && method === 'POST') {
       return readBody(req, (err, body) => {
         if (err) return sendJson(res, 400, { error: err.message });
@@ -60,18 +65,21 @@ const server = http.createServer((req, res) => {
       });
     }
 
+    // GET /orders/:id
     if (parts.length === 2 && method === 'GET') {
       if (!order) return sendJson(res, 404, { error: 'Pedido não encontrado' });
       return sendJson(res, 200, order);
     }
 
+    // DELETE /orders/:id (204 sem corpo)
     if (parts.length === 2 && method === 'DELETE') {
       if (!order) return sendJson(res, 404, { error: 'Pedido não encontrado' });
       orders = orders.filter((o) => o.id !== id);
-      res.writeHead(204); 
+      res.writeHead(204);
       return res.end();
     }
 
+    // PATCH /orders/:id/status
     if (parts.length === 3 && parts[2] === 'status' && method === 'PATCH') {
       return readBody(req, (err, body) => {
         if (err) return sendJson(res, 400, { error: err.message });
@@ -87,6 +95,7 @@ const server = http.createServer((req, res) => {
     }
   }
 
+  // Qualquer rota ou método não previsto
   sendJson(res, 404, { error: 'Rota não encontrada' });
 });
 
